@@ -1,0 +1,95 @@
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <chrono>
+
+using namespace std;
+
+enum Direction{UP = 1, DOWN = (-1), IDLE = 0 };
+
+class Elevator 
+{
+private:
+	int currentFloor;
+	Direction direction;
+	vector<int> requests;
+
+public:
+	Elevator() :
+		currentFloor(1), direction(IDLE) {};
+
+	void requestFloor(int floor)
+	{
+		requests.push_back(floor);
+	}
+
+	void setDirection()
+	{
+		if (requests.empty()) return;
+
+		int floorDiff = (currentFloor - requests[0]);
+
+		if (floorDiff == 0) direction = IDLE;
+		if (floorDiff < 0) direction = UP;
+		if (floorDiff > 0) direction = DOWN;
+	}
+
+	void proceed()
+	{
+		
+		if (requests.empty()) return;
+
+		currentFloor += direction;
+		print();
+		cout << "Moving..." << endl;
+
+		if (currentFloor == requests[0])
+		{
+			cout << currentFloor << " floor arived!" << endl;
+			requests.erase(requests.begin());
+			direction = IDLE;
+			this_thread::sleep_for(chrono::seconds(3));
+			print();
+		}
+
+		
+	}
+
+	void print() const
+	{
+		system("CLS");
+		cout << "Current Floor : " << currentFloor << " | ";
+
+		if (direction == UP) cout << "↑";
+		else if (direction == DOWN) cout << "↓";
+		else cout << " ";
+
+		cout << " | Requests: ";
+		for (int f : requests) cout << f << " ";
+		cout << endl;
+	}
+};
+
+int main()
+{
+	Elevator elevator;
+
+	thread inputThread([&]()
+		{
+			while (true)
+			{
+				int floor;
+				cout << "Input floor: ";
+				cin >> floor;
+				elevator.requestFloor(floor);
+			}
+		});
+
+	while (true)
+	{
+		elevator.setDirection();
+
+		elevator.proceed();
+		this_thread::sleep_for(chrono::seconds(1));
+	}
+}
