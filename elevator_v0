@@ -1,0 +1,76 @@
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <chrono>
+
+using namespace std;
+
+enum Direction{UP = 1, DOWN = (-1), IDLE = 0 };
+
+class Elevator 
+{
+private:
+	int currentFloor;
+	Direction direction;
+	vector<int> requests;
+
+public:
+	Elevator() :
+		currentFloor(1), direction(UP) {};
+
+	void requestFloor(int floor)
+	{
+		requests.push_back(floor);
+	}
+
+	void setDirection()
+	{
+		if (requests.empty()) return;
+
+		int floorDiff = (currentFloor - requests[0]);
+
+		if (floorDiff == 0) direction = IDLE;
+		if (floorDiff < 0) direction = UP;
+		if (floorDiff > 0) direction = DOWN;
+	}
+
+	void proceed()
+	{
+		if (requests.empty()) return;
+
+		while (currentFloor != requests[0])
+		{
+			cout << "Moving..." << endl;
+			currentFloor += direction;
+			print();
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+
+		requests.erase(requests.begin());
+	}
+
+	void print()
+	{
+		cout << "Current Floor : " << currentFloor << endl;
+	}
+};
+
+int main()
+{
+	Elevator elevator;
+
+	while (true)
+	{
+		int floor{};
+
+		elevator.print();
+
+		cout << "input floor: ";
+
+		cin >> floor;
+
+		elevator.requestFloor(floor);
+		elevator.setDirection();
+		elevator.proceed();
+	}
+}
